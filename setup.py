@@ -709,11 +709,10 @@ class my_build_ext(build_ext):
 
     def _why_cant_build_extension(self, ext):
         # Return None, or a reason it can't be built.
-        # Exclude exchange 32-bit utility libraries from 64-bit
-        # builds. Note that the exchange module now builds, but only
-        # includes interfaces for 64-bit builds.
-        if self.plat_name == 'win-amd64' and ext.name == 'exchdapi':
-            return "No 64-bit library for utility functions available."
+        if ext.name in {'exchdapi', 'exchange', 'mapi'}:
+            # Dont need these modules, and they require headers not present in
+            # the windows SDK
+            return ext.name + " module is disabled"
         if get_build_version() >=14:
             if ext.name == 'exchange':
                 ext.libraries.append('legacy_stdio_definitions')
@@ -891,7 +890,7 @@ class my_build_ext(build_ext):
             # Should have the same length - if not we lost a file!
             if len(mfc_files) is not len(mfc_contents):
                 mfc_contents = []
-        
+
         return mfc_contents
 
     def lookupMfcInWinSxS(self, mfc_version, mfc_libraries):
@@ -923,7 +922,7 @@ class my_build_ext(build_ext):
                 print("Could not find WinSxS directory in %WINDIR%.")
         else:
             print("Windows directory not found!")
-        
+
         return mfc_contents
 
     def build_extensions(self):
